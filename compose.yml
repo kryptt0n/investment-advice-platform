@@ -1,0 +1,65 @@
+name: investment-advice
+services:
+
+  database:
+      image: postgres:latest
+      restart: always
+      environment:
+        POSTGRES_USER: ${DB_USERNAME}
+        POSTGRES_PASSWORD: ${DB_PASSWORD}
+      ports:
+        - "15432:5432" 
+      volumes:
+        - db_data:/var/lib/postgresql/data
+        - ./db-init/init.sql:/docker-entrypoint-initdb.d/init.sql
+      networks:
+        - my_network
+
+  consul-server:
+    image: hashicorp/consul
+    container_name: consul-server
+    command: agent -dev -client=0.0.0.0
+    ports:
+      - "8500:8500"
+      - "8600:8600/udp"
+    networks:
+      - my_network
+
+  # gateway:
+  #   image: openjdk:21-jdk
+  #   volumes:
+  #     - ./backend/gateway:/app/gateway
+  #   working_dir: /app/gateway
+  #   ports:
+  #     - "8080:8080"
+  #   networks:
+  #     - my_network
+  #   command: bash -c "chmod +x ./mvnw && ./mvnw spring-boot:run && tail -f /dev/null"
+  #   depends_on:
+  #     - consul-server
+
+  ms-ss-authentication:
+    image: openjdk:21-jdk
+    ports:
+      - "8181:8181"
+    networks:
+      - my_network
+    volumes:
+      - ./backend/authentication:/app/ms-ss-authentication
+    working_dir: /app/ms-ss-authentication
+    environment:
+      - DB_DATABASE=ss_credentials
+      - DB_HOST=${DB_HOST}
+      - DB_USERNAME=${DB_USERNAME}
+      - DB_PASSWORD=${DB_PASSWORD}
+    command: bash -c "chmod +x ./mvnw && ./mvnw spring-boot:run && tail -f /dev/null"
+    depends_on:
+      - consul-server
+      - database
+
+volumes:
+  db_data:
+  minio_data: 
+
+networks:
+  my_network:
