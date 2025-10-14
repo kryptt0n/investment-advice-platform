@@ -25,28 +25,43 @@ services:
     networks:
       - my_network
 
-  # gateway:
-  #   image: openjdk:21-jdk
-  #   volumes:
-  #     - ./backend/gateway:/app/gateway
-  #   working_dir: /app/gateway
-  #   ports:
-  #     - "8080:8080"
-  #   networks:
-  #     - my_network
-  #   command: bash -c "chmod +x ./mvnw && ./mvnw spring-boot:run && tail -f /dev/null"
-  #   depends_on:
-  #     - consul-server
+  gateway:
+    image: openjdk:21-jdk
+    volumes:
+      - ./backend/gateway:/app/gateway
+    working_dir: /app/gateway
+    ports:
+      - "8080:8080"
+    networks:
+      - my_network
+    command: bash -c "chmod +x ./mvnw && ./mvnw spring-boot:run && tail -f /dev/null"
+    depends_on:
+      - consul-server
+      - ms-os-identity
 
-  ms-ss-authentication:
+  ms-os-identity:
+    image: openjdk:21-jdk
+    ports:
+      - "8180:8180"
+    networks:
+      - my_network
+    volumes:
+      - ./backend/identity:/app/ms-os-identity
+    working_dir: /app/ms-os-identity
+    command: bash -c "chmod +x ./mvnw && ./mvnw spring-boot:run && tail -f /dev/null"
+    depends_on:
+      - consul-server 
+      - ms-ss-credentials
+
+  ms-ss-credentials:
     image: openjdk:21-jdk
     ports:
       - "8181:8181"
     networks:
       - my_network
     volumes:
-      - ./backend/authentication:/app/ms-ss-authentication
-    working_dir: /app/ms-ss-authentication
+      - ./backend/credentials:/app/ms-ss-credentials
+    working_dir: /app/ms-ss-credentials
     environment:
       - DB_DATABASE=ss_credentials
       - DB_HOST=${DB_HOST}
@@ -56,6 +71,8 @@ services:
     depends_on:
       - consul-server
       - database
+  
+
 
 volumes:
   db_data:
