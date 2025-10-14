@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/generate-token")
+@RequestMapping("/code")
 public class TokenController {
 
     private final TokenService tokenService;
@@ -22,9 +22,15 @@ public class TokenController {
         this.tokenService = tokenService;
     }
 
-    @PostMapping
-    public ResponseEntity<Void> generateToken(@Valid @RequestBody CredentialDTO credentialDTO) {
+    @PostMapping("/generate")
+    public ResponseEntity<Void> generate(@Valid @RequestBody CredentialDTO credentialDTO) {
         tokenService.generateToken(credentialDTO);
         return ResponseEntity.status(HttpStatus.CREATED).build();
+    }
+
+    @PostMapping("/verify")
+    public ResponseEntity<Boolean> verify(@Valid @RequestBody CredentialDTO credentialDTO) {
+        //TODO: finish verify token
+        return ResponseEntity.ok(true);
     }
 }
